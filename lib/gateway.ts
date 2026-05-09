@@ -139,6 +139,55 @@ export async function revokeToken(
   });
 }
 
+/** Inputs for POST /v1/admin/mint. Mirrors the gateway request shape. */
+export interface MintOptions {
+  subject: string;
+  /** Optional issuer override; defaults to the gateway's "intentgate". */
+  issuer?: string;
+  /** Time-to-live in seconds. 0 / undefined = no expiry caveat. */
+  ttlSeconds?: number;
+  /** Optional whitelist; agent may only call these tools. */
+  tools?: string[];
+  /** Optional cap on total calls signed into the chain. */
+  maxCalls?: number;
+}
+
+/** Successful response from POST /v1/admin/mint. */
+export interface MintedToken {
+  token: string;
+  jti: string;
+  subject: string;
+  /** RFC3339 timestamp, or empty string when no TTL was requested. */
+  expires_at: string;
+}
+
+/**
+ * POST /v1/admin/mint — issues a fresh capability token signed under
+ * the gateway's master key.
+ *
+ * Returns the encoded token only once; the caller is expected to hand
+ * it to the agent immediately (the gateway never stores it server-side
+ * in plaintext, only the JTI is recoverable from the audit log).
+ */
+export async function mintToken(opts: MintOptions): Promise<MintedToken> {
+  const body: Record<string, unknown> = { subject: opts.subject };
+  if (opts.issuer && opts.issuer.trim() !== "") body.issuer = opts.issuer.trim();
+  if (typeof opts.ttlSeconds === "number" && opts.ttlSeconds > 0) {
+    body.ttl_seconds = Math.floor(opts.ttlSeconds);
+  }
+  if (opts.tools && opts.tools.length > 0) {
+    body.tools = opts.tools.map((t) => t.trim()).filter((t) => t !== "");
+  }
+  if (typeof opts.maxCalls === "number" && opts.maxCalls > 0) {
+    body.max_calls = Math.floor(opts.maxCalls);
+  }
+  return gatewayFetch<MintedToken>("/v1/admin/mint", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
 /**
  * Convenience: fetch health + revocations in parallel for the
  * dashboard. Returns partial state (with errors) instead of throwing

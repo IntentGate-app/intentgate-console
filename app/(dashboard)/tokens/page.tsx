@@ -1,13 +1,14 @@
 /**
- * Tokens page. v0.1 surface:
+ * Tokens page. v0.2 surface:
  *
+ *   - "Mint a token" form (calls mintFromForm Server Action). The
+ *     encoded token is shown ONCE in a copy-to-clipboard panel.
  *   - "Revoke a JTI" form (calls revokeFromForm Server Action)
  *   - List of currently revoked tokens
  *
  * Future: list of currently *active* tokens once the gateway gains a
- * /v1/admin/tokens endpoint, plus a Mint form once the gateway gains
- * /v1/admin/mint. Both are gateway-side additions — out of scope for
- * this session.
+ * /v1/admin/tokens endpoint. That requires a server-side token
+ * registry — out of scope for v0.2.
  */
 
 import { Topbar } from "@/components/topbar";
@@ -16,6 +17,7 @@ import { EmptyState } from "@/components/empty-state";
 import { fetchRevocations, GatewayError } from "@/lib/gateway";
 import { ListX } from "lucide-react";
 import { RevokeForm } from "./revoke-form";
+import { MintForm } from "./mint-form";
 
 export const dynamic = "force-dynamic";
 
@@ -34,10 +36,17 @@ export default async function TokensPage() {
     <>
       <Topbar
         title="Tokens"
-        subtitle="Revoke leaked tokens and review the deny list."
+        subtitle="Mint capabilities, revoke leaked tokens, and review the deny list."
       />
 
       <main className="flex-1 space-y-8 px-8 py-8">
+        <section>
+          <h2 className="mb-3 text-base font-semibold tracking-tight">
+            Mint a token
+          </h2>
+          <MintForm />
+        </section>
+
         <section>
           <h2 className="mb-3 text-base font-semibold tracking-tight">
             Revoke a token
