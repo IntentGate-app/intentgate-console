@@ -11,6 +11,8 @@ import "server-only";
 
 import { getConfig } from "@/lib/config";
 import type {
+  AuditQueryFilter,
+  AuditQueryResponse,
   HealthResponse,
   RevocationsResponse,
   RevokedToken,
@@ -186,6 +188,51 @@ export async function mintToken(opts: MintOptions): Promise<MintedToken> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
+}
+
+/**
+ * GET /v1/admin/audit — query the persisted audit log.
+ *
+ * The gateway only registers this endpoint when audit persistence is
+ * enabled (INTENTGATE_AUDIT_PERSIST=true with INTENTGATE_POSTGRES_URL).
+ * Older / stdout-only deployments return 404, which surfaces as a
+ * GatewayError with status 404; the audit page treats that as
+ * "feature not enabled" rather than a hard error.
+ */
+export async function fetchAudit(
+  filter: AuditQueryFilter = {},
+): Promise<AuditQueryResponse> {
+  const params = new URLSearchParams();
+  for (const [k, v] of Object.entries(filter)) {
+    if (v === undefined || v === null || v === "") continue;
+    if (typeof v === "boolean") {
+      if (v) params.set(k, "true");
+      continue;
+    }
+    params.set(k, String(v));
+  }
+  const query = params.toString();
+  const path = query ? `/v1/admin/audit?${query}` : "/v1/admin/audit";
+  return gatewayFetch<AuditQueryResponse>(path);
+}
+
+/**
+ * Returns true if the gateway exposes the /v1/admin/audit endpoint.
+ * Cheap probe used by the audit / compliance pages to choose between
+ * "live query" and "guidance card / upload fallback" UIs.
+ */
+export async function isAuditQuerySupported(): Promise<boolean> {
+  try {
+    await fetchAudit({ limit: 1 });
+    return true;
+  } catch (err) {
+    if (err instanceof GatewayError && err.status === 404) return false;
+    if (err instanceof GatewayError && err.status === 503) return false;
+    // Anything else (auth, transport) is a real error; surface false
+    // here so the UI shows the disabled state. The detail will land in
+    // server logs.
+    return false;
+  }
 }
 
 /**
