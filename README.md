@@ -102,4 +102,4 @@ Apache 2.0 and welcomes community contributions. Open an issue to discuss any no
 
 ## Security
 
-If you find a security vulnerability, please **do not** open a public issue. Email security@netgnarus.com or open a GitHub Security Advisory on this repo.
+If you find a security vulnerability, please **do not** open a public issue. Email security@intentgate.app or open a GitHub Security Advisory on this repo.
