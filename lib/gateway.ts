@@ -217,6 +217,37 @@ export async function fetchAudit(
 }
 
 /**
+ * One agent the gateway has observed, mirroring discovery.ObservedAgent
+ * (GET /v1/admin/agents). Passive discovery aggregated from the audit
+ * log: the technical truth of what AI is running and what it touches.
+ */
+export interface ObservedAgent {
+  agent_id: string;
+  tenant?: string;
+  tools: string[];
+  risk_signals: string[];
+  calls: number;
+  blocked: number;
+  first_seen: string;
+  last_seen: string;
+  session_count: number;
+}
+
+export interface AgentsResponse {
+  agents: ObservedAgent[];
+  events_scanned: number;
+}
+
+/**
+ * GET /v1/admin/agents — passive agent discovery. Registered only when
+ * audit persistence is enabled; older gateways return 404, which the
+ * page detects to show a "feature not enabled" panel.
+ */
+export async function fetchAgents(): Promise<AgentsResponse> {
+  return gatewayFetch<AgentsResponse>("/v1/admin/agents");
+}
+
+/**
  * Returns true if the gateway exposes the /v1/admin/audit endpoint.
  * Cheap probe used by the audit / compliance pages to choose between
  * "live query" and "guidance card / upload fallback" UIs.

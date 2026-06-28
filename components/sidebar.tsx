@@ -18,6 +18,7 @@ import {
   ScrollText,
   ListTree,
   Settings,
+  Boxes,
   type LucideIcon,
 } from "lucide-react";
 
@@ -30,6 +31,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { href: "/", label: "Dashboard", icon: ShieldCheck },
   { href: "/tokens", label: "Tokens", icon: KeyRound },
+  { href: "/agents", label: "Agents", icon: Boxes },
   { href: "/policies", label: "Policies", icon: ScrollText },
   { href: "/audit", label: "Audit", icon: ListTree },
   { href: "/settings", label: "Settings", icon: Settings },
